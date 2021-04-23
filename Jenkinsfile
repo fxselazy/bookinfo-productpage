@@ -30,12 +30,12 @@ spec:
     - cat
     tty: true
   - name: skan
-    image: saroma/jdk11-python3:latest
+    image: alcide/skan:v0.9.0-debug
     command:
     - cat
     tty: true
   - name: java-node
-    image: timbru31/java-node:11-alpine-jre-14
+    image: saroma/jdk11-python3:latest
     command:
     - cat
     tty: true
