@@ -112,7 +112,7 @@ spec:
                         -D sonar.projectKey=${PROJECT_KEY} \
                         -D sonar.projectName=${PROJECT_NAME} \
                         -D sonar.projectVersion=${BRANCH_NAME}-${BUILD_NUMBER} \
-                        -D sonar.sources=./src
+                        -D sonar.sources=./
                         '''
                     } // End withSonarQubeEnv
                     // Run Quality Gate
