@@ -1,0 +1,73 @@
+// Define variables
+def scmVars
+
+// Start Pipeline
+pipeline {
+
+  // Configure Jenkins Slave
+  agent {
+    // Use Kubernetes as dynamic Jenkins Slave
+    kubernetes {
+      // Kubernetes Manifest File to spin up Pod to do build
+      yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: helm
+    image: lachlanevenson/k8s-helm:v3.0.2
+    command:
+    - cat
+    tty: true
+"""
+    } // End kubernetes
+  } // End agent
+
+  // Git Parameter Choices
+  parameters {
+    gitParameter name: 'TAG',
+                 selectedValue: 'TOP',
+                 sortMode: 'DESCENDING_SMART',
+                 tagFilter: 'build-*',
+                 type: 'PT_TAG'
+  }
+
+  // Start Pipeline
+  stages {
+
+    // ***** Stage Clone *****
+    stage('Clone productpage source code') {
+      // Steps to run build
+      steps {
+          // Use script to run
+          script {
+          scmVars = checkout([
+            $class: 'GitSCM',
+            branches: [[name: "refs/tags/${params.TAG}"]],
+            userRemoteConfigs: [[
+              credentialsId: 'bookinfo-git-deploy-key',
+              url: 'git@github.com:fxselazy/bookinfo-productpage.git'
+            ]]
+          ])
+        } // End script
+      } // End steps
+    } // End stage
+
+    // ***** Stage Deploy *****
+    stage('Deploy productpage with Helm Chart') {
+      steps {
+        container('helm') {
+          script {
+            withKubeConfig([credentialsId: 'kubeconfig']) {
+              // Helm upgrade with set production tag
+              sh "helm upgrade -i -f k8s/helm-values/values-bookinfo-prd-productpage.yaml \
+                --set extraEnv.COMMIT_ID=${scmVars.GIT_COMMIT} \
+                --set productpage.tag=${params.TAG} \
+                --namespace fuse-bookinfo-prd fuse-productpage-prd k8s/helm"
+            }
+          }
+        }
+      }
+    }
+  } // End stages
+} // End pipeline
