@@ -30,7 +30,7 @@ spec:
     - cat
     tty: true
   - name: skan
-    image: alcide/skan:v0.9.0-debug
+    image: saroma/jdk11-python3:latest
     command:
     - cat
     tty: true
