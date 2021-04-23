@@ -154,7 +154,6 @@ spec:
       steps {
         container('docker') {
           script {
-              sh '''sudo su & pip3 install -r requirements.txt'''
             // Do docker login authentication
             docker.withRegistry('https://ghcr.io', 'github-registry') {
               // Do docker build and docker push
