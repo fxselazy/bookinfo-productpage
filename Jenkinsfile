@@ -35,7 +35,7 @@ spec:
     - cat
     tty: true
   - name: java-node
-    image: timbru31/java-node:11-alpine-jre-14
+    image: saroma/jdk11-python3:latest
     command:
     - cat
     tty: true
@@ -112,7 +112,7 @@ spec:
                         -D sonar.projectKey=${PROJECT_KEY} \
                         -D sonar.projectName=${PROJECT_NAME} \
                         -D sonar.projectVersion=${BRANCH_NAME}-${BUILD_NUMBER} \
-                        -D sonar.sources=./src
+                        -D sonar.sources=./
                         '''
                     } // End withSonarQubeEnv
                     // Run Quality Gate
@@ -122,6 +122,28 @@ spec:
                             error "Pipeline aborted due to quality gate failure: ${qg.status}"
                         }
                     } // End Timeout
+                } // End script
+            } // End container
+        } // End steps
+    } // End stage
+
+    // ***** Stage OWASP *****
+    stage('OWASP Dependency Check') {
+        steps {
+            container('java-node') {
+                script {
+                    sh '''pip3 install -r requirements.txt'''
+                    // Start OWASP Dependency Check
+                    dependencyCheck(
+                        additionalArguments: "--data /home/jenkins/dependency-check-data --out dependency-check-report.xml",
+                        odcInstallation: "dependency-check"
+                    )
+                    // Publish report to Jenkins
+                    dependencyCheckPublisher(
+                        pattern: 'dependency-check-report.xml'
+                    )
+                    // Remove application dependency
+                    sh'''rm -rf src/node_modules src/package-lock.json'''
                 } // End script
             } // End container
         } // End steps
@@ -149,7 +171,7 @@ spec:
                 script {
                     // dend Docker Image to Anchore Analyzer
                     writeFile file: 'anchore_images' , text: "ghcr.io/fxselazy/bookinfo-productpage:${ENV_NAME}"
-                    anchore name: 'anchore_images' , bailOnFail: false
+                    anchore name: 'anchore_images' , bailOnFail: false , engineRetries: '10000'
                 } // End script
             } // End container
         } // End steps

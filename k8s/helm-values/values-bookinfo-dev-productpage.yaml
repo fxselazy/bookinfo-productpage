@@ -15,3 +15,7 @@ ingress:
   # host: bookinfo.dev.opsta.net
   # path: "/student46/productpage(/|$)(.*)"
   serviceType: ClusterIP
+extraEnv:
+  DETAILS_HOSTNAME: http://fuse-details-dev:8082
+  RATINGS_HOSTNAME: http://fuse-ratings-dev:8081
+  REVIEWS_HOSTNAME: http://fuse-reviews-dev:9080
